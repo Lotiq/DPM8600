@@ -50,8 +50,8 @@ void DPM_8605::power(bool on, int8_t &statusCode)
             _serialRef->println(F(":01w12=0,"));
         }
 
-        bool completed = listen(response);
-
+        completed = listen(response);
+        
         // Add a retry
         retries += 1;
 
