@@ -2,12 +2,12 @@
 #include <Arduino.h>
 #include <DPM_8600.h>
 
-DPM_8600::DPM_8600(char[2] address)
+DPM_8600::DPM_8600(char[2] address = "01")
 {
     _address = address;
 }
 
-int DPM_8600::begin(HardwareSerial& serial, int8_t maxRetry)
+int DPM_8600::begin(HardwareSerial& serial, int8_t maxRetry = 3)
 {
     _serial = &serial;
     _maxRetry = maxRetry;
@@ -45,7 +45,7 @@ int DPM_8600::power(bool on)
 
 int DPM_8600::writeVC(float v, float c)
 {
-    int8_t retries = 0;
+    int8_t retry = 0;
     String response = "";
     bool completed = false;
     float _v = (v > 60) ? 60 : v;
@@ -62,9 +62,9 @@ int DPM_8600::writeVC(float v, float c)
         completed = listen(response);
 
         // Add a retry
-        retries += 1;
+        retry += 1;
 
-    } while ((!completed) && (retries < _maxRetry));
+    } while ((!completed) && (retry < _maxRetry));
 
     return (completed) ? 1 : -24;
 }
@@ -96,7 +96,7 @@ int DPM_8600::write(char cmd, float value)
              // Default is power. In case of a mistake, error will be triggered.
     }
 
-    int8_t retries = 0;
+    int8_t retry = 0;
     String response = "";
     bool completed = false;
 
@@ -112,9 +112,9 @@ int DPM_8600::write(char cmd, float value)
         completed = listen(response);
 
         // Add a retry
-        retries += 1;
+        retry += 1;
 
-    } while ((!completed) && (retries < _maxRetry));
+    } while ((!completed) && (retry < _maxRetry));
 
     if (!completed) {
         switch (cmd) {
@@ -159,7 +159,7 @@ float DPM_8600::read(char cmd)
         completed = listen(response);
 
         // Add a retry
-        retries += 1;
+        retry += 1;
 
     } while ((!completed) && (retry < _maxRetry)); // Stop running either when data received or max attempts happened.
 
