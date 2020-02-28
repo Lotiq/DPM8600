@@ -2,16 +2,23 @@
 #include <Arduino.h>
 #include <DPM_8600.h>
 
-DPM_8600::DPM_8600(char[2] address = "01")
+DPM_8600::DPM_8600(int8_t address=1)
 {
-    _address = address;
+    if ((address < 10) && (address >= 1)){
+        _address = "0" + String(address);
+    } else if ((address >= 10 && address < 100)) {
+        _address = String(address);
+    } else {
+        _address = "01";
+    }
+
 }
 
-int DPM_8600::begin(HardwareSerial& serial, int8_t maxRetry = 3)
+int DPM_8600::begin(HardwareSerial& serial, int8_t maxRetry=3)
 {
     _serial = &serial;
     _maxRetry = maxRetry;
-    _maxCurrent = read('m');
+    _maxCurrent = read('m'); // not really used anywhere
     return (_maxCurrent > 0) ? 1 : -1;
 }
 
@@ -39,7 +46,7 @@ bool DPM_8600::listen(String &response)
 
 int DPM_8600::power(bool on)
 {
-    int response = write('p', (on == true) ? 1 : 0);
+    int response = write('p', (on) ? 1 : 0);
     return response;
 }
 
@@ -48,15 +55,20 @@ int DPM_8600::writeVC(float v, float c)
     int8_t retry = 0;
     String response = "";
     bool completed = false;
-    float _v = (v > 60) ? 60 : v;
-    float _c = (c > _maxCurrent) ? _maxCurrent : c;
+    int _v = floor(v * 100);
+    int _c = floor(c * 1000);
+
+    if ((_v < 0) || (_v > 65535) || (_c < 0) || (_c > 65535)) {
+        return -16; // Value outside boundaries
+    }
+
     do
     {
         // Clear response
-        response = "";
+        //response = "";
 
         // Send command
-        _serial->println(":" + _address + "w20=" + String(floor(_v * 100)) + "," + String(floor(_c*1000)) + ",");
+        _serial->println(":" + _address + "w20=" + String(_v) + "," + String(_c) + ",");
 
         // Listen for reply
         completed = listen(response);
@@ -74,26 +86,26 @@ int DPM_8600::write(char cmd, float value)
     
     int x = 0;
     String command = "";
-    float _value;
     // x100 multiplication for voltage and x1000 for current because of the resolution
     switch (cmd) {
-        case 'c': case 'C':
-            _value = (value > _maxCurrent) ? _maxCurrent : value; 
-            x = floor(_value * 1000); 
+        case 'c': case 'C': 
+            x = floor(value * 1000); 
             command = "11"; 
             break;
         case 'v': case 'V':
-            _value = (value > 60) ? 60 : value; 
-            x = floor(_value * 100); 
+            x = floor(value * 100); 
             command = "10";
             break;
         default: 
-            if (value != 0 || value != 1) {
+            if (value != 0 && value != 1) {
                 return -20;
             }
             x = floor(value); 
             command = "12";
              // Default is power. In case of a mistake, error will be triggered.
+    }
+    if (x < 0 || x > 65535) {
+        return -16; // Value outside boundaries
     }
 
     int8_t retry = 0;
@@ -103,7 +115,7 @@ int DPM_8600::write(char cmd, float value)
     do
     {
         // Clear response
-        response = "";
+        //response = "";
 
         // Send command
         _serial->println(":" + _address + "w" + command + "=" + String(x) + ",");
@@ -135,7 +147,7 @@ float DPM_8600::read(char cmd)
     int8_t retry = 0;
     bool completed = false;
     String response = "";
-    char[2] command;
+    String command = "";
 
     // Getting the correct command number
     switch (cmd) {
@@ -150,7 +162,7 @@ float DPM_8600::read(char cmd)
     do
     {
         // Clear response
-        response = "";
+        //response = "";
 
         // Send a command
         _serial->println(":" + _address + "r" + command + "=0,");

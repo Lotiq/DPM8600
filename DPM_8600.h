@@ -52,7 +52,7 @@
 class DPM_8600
 {
   public:
-    DPM_8600(char[2] address);
+    DPM_8600(int8_t address);
     int begin(HardwareSerial &serial, int8_t maxRetry);
     int power(bool on);
     int write(char cmd, float value);
@@ -66,7 +66,7 @@ class DPM_8600
     HardwareSerial *_serial;
     int8_t _maxRetry;
     int _maxCurrent;
-    char[2] _address;
+    String _address;
 };
 
 #endif
