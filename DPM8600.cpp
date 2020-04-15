@@ -1,8 +1,8 @@
 
 #include <Arduino.h>
-#include <DPM_8600.h>
+#include <DPM8600.h>
 
-DPM_8600::DPM_8600(int8_t address=1)
+DPM8600::DPM8600(int8_t address=1)
 {
     if ((address < 10) && (address >= 1)){
         _address = "0" + String(address);
@@ -14,18 +14,18 @@ DPM_8600::DPM_8600(int8_t address=1)
 
 }
 
-int DPM_8600::begin(HardwareSerial& serial, int8_t maxRetry=3)
+int DPM8600::begin(HardwareSerial& serial, int8_t maxRetry)
 {
     _serial = &serial;
     _maxRetry = maxRetry;
-    _maxCurrent = read('m'); // not really used anywhere
+    _maxCurrent = read('m');
     return (_maxCurrent > 0) ? 1 : -1;
 }
 
-bool DPM_8600::listen(String &response)
+bool DPM8600::listen(String &response)
 {
     unsigned long errorTimer = millis();
-    while ((millis() - errorTimer) < 200)
+    while ((millis() - errorTimer) < 250)
     {
         if (_serial->available())
         {
@@ -44,13 +44,13 @@ bool DPM_8600::listen(String &response)
     return false;
 }
 
-int DPM_8600::power(bool on)
+int DPM8600::power(bool on)
 {
     int response = write('p', (on) ? 1 : 0);
     return response;
 }
 
-int DPM_8600::writeVC(float v, float c)
+int DPM8600::writeVC(float v, float c)
 {
     int8_t retry = 0;
     String response = "";
@@ -65,7 +65,7 @@ int DPM_8600::writeVC(float v, float c)
     do
     {
         // Clear response
-        //response = "";
+        response = "";
 
         // Send command
         _serial->println(":" + _address + "w20=" + String(_v) + "," + String(_c) + ",");
@@ -81,7 +81,7 @@ int DPM_8600::writeVC(float v, float c)
     return (completed) ? 1 : -24;
 }
 
-int DPM_8600::write(char cmd, float value)
+int DPM8600::write(char cmd, float value)
 {
     
     int x = 0;
@@ -96,12 +96,14 @@ int DPM_8600::write(char cmd, float value)
             x = floor(value * 100); 
             command = "10";
             break;
-        default: 
+        case 'p': case 'P':
             if (value != 0 && value != 1) {
                 return -20;
             }
             x = floor(value); 
             command = "12";
+        default: 
+            return -25;
              // Default is power. In case of a mistake, error will be triggered.
     }
     if (x < 0 || x > 65535) {
@@ -115,7 +117,7 @@ int DPM_8600::write(char cmd, float value)
     do
     {
         // Clear response
-        //response = "";
+        response = "";
 
         // Send command
         _serial->println(":" + _address + "w" + command + "=" + String(x) + ",");
@@ -141,7 +143,7 @@ int DPM_8600::write(char cmd, float value)
     }
 }
 
-float DPM_8600::read(char cmd)
+float DPM8600::read(char cmd)
 {
 
     int8_t retry = 0;
@@ -162,7 +164,7 @@ float DPM_8600::read(char cmd)
     do
     {
         // Clear response
-        //response = "";
+        response = "";
 
         // Send a command
         _serial->println(":" + _address + "r" + command + "=0,");
@@ -195,7 +197,7 @@ float DPM_8600::read(char cmd)
     }
 }
 
-float DPM_8600::processString(String str)
+float DPM8600::processString(String str)
 {
     str.remove(0, 7);
     str.replace(".", "");
