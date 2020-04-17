@@ -71,7 +71,6 @@ class DPM8600
     
     HardwareSerial *_serial;
     int8_t _maxRetry;
-    int _maxCurrent;
     String _address;
 };
 

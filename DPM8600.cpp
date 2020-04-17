@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <DPM8600.h>
 
+// DECLARATION
+// ------------------------------
 DPM8600::DPM8600(int8_t address=1)
 {
     if ((address < 10) && (address >= 1)){
@@ -14,34 +16,14 @@ DPM8600::DPM8600(int8_t address=1)
 
 }
 
+// PUBLIC 
+// ------------------------------
 int DPM8600::begin(HardwareSerial& serial, int8_t maxRetry)
 {
     _serial = &serial;
     _maxRetry = maxRetry;
-    _maxCurrent = read('m');
-    return (_maxCurrent > 0) ? 1 : -1;
-}
-
-bool DPM8600::listen(String &response)
-{
-    unsigned long errorTimer = millis();
-    while ((millis() - errorTimer) < 250)
-    {
-        if (_serial->available())
-        {
-            char inChar = (char)_serial->read();
-            if (inChar == '\n')
-            {
-                // NEED to implement response checking
-                return true;
-            }
-            else
-            {
-                response += inChar;
-            }
-        }
-    }
-    return false;
+    float maxCurrent = read('m');
+    return (maxCurrent > 0) ? 1 : -1;
 }
 
 int DPM8600::power(bool on)
@@ -197,10 +179,34 @@ float DPM8600::read(char cmd)
     }
 }
 
+// PRIVATE
+// ------------------------------
+bool DPM8600::listen(String &response)
+{
+    unsigned long errorTimer = millis();
+    while ((millis() - errorTimer) < 250)
+    {
+        if (_serial->available())
+        {
+            char inChar = (char)_serial->read();
+            if (inChar == '\n')
+            {
+                // No need to implement response checking as no way to check whether the command was correct, only received in a correct format. But format is always correct.
+                return true;
+            }
+            else
+            {
+                response += inChar;
+            }
+        }
+    }
+    return false;
+}
+
+
 float DPM8600::processString(String str)
 {
     str.remove(0, 7);
     str.replace(".", "");
-    str.replace(",", "");
     return atof(str.c_str());
 }
