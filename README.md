@@ -1,10 +1,11 @@
 # DPM8600
 
-DPM8600 is an Arduino library for controlling DPM8600 power converters (DPM8605, DPM8608, DPM8616 and DPM8624). The library uses Serial communication for sending and receiving commands using [this protocol](https://www.mediafire.com/folder/ds68ouh6f4lx7/DPM8600_Data).
+DPM8600 is an Arduino library for controlling DPM8600 series power converters (DPM8605, DPM8608, DPM8616 and DPM8624). The library uses Serial communication for sending and receiving commands using [this protocol](https://www.mediafire.com/folder/ds68ouh6f4lx7/DPM8600_Data).
 
 ## Table of Contents
 
 * [General Information](#general-information)
+* [Setup](#setup)
 * [Declaration](#declaration)
 * [Function Descriptions](#function-descriptions)
     * [Initialization](#initialization)
@@ -22,11 +23,26 @@ DPM8600 is an Arduino library for controlling DPM8600 power converters (DPM8605,
 <!-- GENERAL INFORMATION -->
 ## General Information
 
-* This library only works for **TTL** version of the converter, not RS-485
+* This library only works for **TTL** version of the converter, not RS-485.
 * Serial communication happens over 5V so use a level converter if your arduino runs at 3.3V.
 * DPM8600 take about 0.6s to turn on an adjust the settings, so turning on the power and immedeately getting the readings will occasionally produce erroneous measurements.
 * Current resolution is 3 decimal places, while voltage is 2 decimal places.
 
+## Setup
+
+![DPM8600 Layout](images/layout.jpg)
+
+As can be seen on the image on above, there several main component to working with DPM8600 power converters. First, In+ In- indicates where the input needs to be connected (10-75V). Then Out+ Out- is for the output. Finally communication is done through ports 1-4:
+
+1 - Power
+
+2 - Data out (->)
+
+3 - Data in (<-)
+
+4 - Ground
+
+If using Arduino with the same 5V serial (e.g Uno), you only need to connect ports 2-4. However, if your Arduino is 3.3V (e.g MKR1010) then you have to use a [level converter](https://www.sparkfun.com/products/12009) to step between different voltages, and to power that converter you would have to use port 1 as well.
 
 <!-- DECLARATION -->
 ## Declaration
@@ -48,7 +64,7 @@ e.g. DPM8600 converter; - creates a converter object with address = 01
 ```cpp
 int begin(HardwareSerial Serial, int8_t maxRetry = 3);
 ```
-Initializes the power converter. Required upon starting up. Serial has to be initiated with the correct **baud rate** of the power converter (Default is 9600).
+Initializes the power converter. Required upon starting up. Serial **has to be initiated beforehand** with the correct **baud rate** of the power converter (Default is 9600). Check out the example code if confused.
 
 * Serial - pass a reference for a hardware serial. 
 * maxRetry - maximum number of retries if the connection fails. Default = 3
@@ -78,8 +94,8 @@ E.g. write('c', 3.21) set current limit on the converter to 3.21A
 
 List of commands:
 
-* 'v' or 'V' - sets voltage limit. Value range: 0 - 60V
-* 'c' or 'C' - sets current limit. Value range: 0 - max available for the converter (e.g. DPM8616 has max current of 16A)
+* 'v' or 'V' - sets voltage limit. Value range: 0 - 60V.
+* 'c' or 'C' - sets current limit. Value range: 0 - max available for the converter (e.g. DPM8616 has max current of 16A).
 * 'p' or 'P' - sets the power on or off. Works same as [`power(bool on)`](#power-switching). Value is 0 (off) or 1 (on), anything else will produce error -20.
 
 Returns 1 on success or a negative integer on error.
