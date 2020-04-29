@@ -4,7 +4,7 @@
 
 // DECLARATION
 // ------------------------------
-DPM8600::DPM8600(int8_t address=1)
+DPM8600::DPM8600(int8_t address)
 {
     if ((address < 10) && (address >= 1)){
         _address = "0" + String(address);
