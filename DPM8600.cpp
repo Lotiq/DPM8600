@@ -47,7 +47,7 @@ int DPM8600::writeVC(float v, float c)
     do
     {
         // Clear response
-        response = "";
+        //response = "";
 
         // Send command
         _serial->println(":" + _address + "w20=" + String(_v) + "," + String(_c) + ",");
@@ -78,14 +78,12 @@ int DPM8600::write(char cmd, float value)
             x = floor(value * 100); 
             command = "10";
             break;
-        case 'p': case 'P':
+        default: 
             if (value != 0 && value != 1) {
                 return -20;
             }
             x = floor(value); 
             command = "12";
-        default: 
-            return -25;
              // Default is power. In case of a mistake, error will be triggered.
     }
     if (x < 0 || x > 65535) {
@@ -99,7 +97,7 @@ int DPM8600::write(char cmd, float value)
     do
     {
         // Clear response
-        response = "";
+        //response = "";
 
         // Send command
         _serial->println(":" + _address + "w" + command + "=" + String(x) + ",");
@@ -146,7 +144,7 @@ float DPM8600::read(char cmd)
     do
     {
         // Clear response
-        response = "";
+        //response = "";
 
         // Send a command
         _serial->println(":" + _address + "r" + command + "=0,");
